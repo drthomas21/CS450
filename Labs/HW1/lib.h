@@ -1,16 +1,18 @@
 #ifndef LIB_H
 #define LIB_H
-#include <windows.h>   // use as needed for your system
-#include <gl/Gl.h>
-#include <gl/glu.h>
+
+#ifdef _WIN32
+	#include <windows.h>
+	#include <gl/Gl.h>
+	#include <gl/glu.h>
+	#include "gl/glut.h"
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+	#include <GL/glut.h>
+#endif
+
 #include <math.h>
+
 #define PI 3.14159265
-
-struct GLintPoint2D {
-	GLint x, y;
-};
-
-struct GLfloatPoint2D {
-	GLfloat x, y;
-};
-#endif;
+#endif

@@ -1,14 +1,10 @@
-#include <windows.h>   // use as needed for your system
-#include <gl/Gl.h>
-#include <gl/glu.h>
-#include <math.h>
+#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <iostream>
 #include "target.h"
 #include "lib.h"
-#define VELOCITY 220.0
-
-FILETIME ft;
-long long time = 0;
+#define TARGET_VELOCITY 220.0
 
 void Target::setX(double x) {
 	this->centerX = x;
@@ -40,16 +36,20 @@ void Target::checkCollision(const Bullet &bullet) {
 }
 
 void Target::calculatePosition() {
-	if (time == 0) {
-		GetSystemTimeAsFileTime(&ft);
-		time = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL);
+	if (!this->isConfigured) {
+		gettimeofday(&this->time, NULL);
+		this->isConfigured = true;
 	} else {
-		long long diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - time; //nanoseconds
+		struct timeval _time;
+		gettimeofday(&_time,NULL);
+		long long diff = _time.tv_usec - this->time.tv_usec; //microseconds
 		double incr = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(10000000.0)); //seconds
 
-		this->centerX += this->xFactor * (VELOCITY * cos(this->theta));
-		this->centerX += this->yFactor * (VELOCITY * sin(this->theta));
-	}	
+		this->centerX += this->xFactor * (TARGET_VELOCITY * cos(this->theta));
+		this->centerX += this->yFactor * (TARGET_VELOCITY * sin(this->theta));
+
+		this->time.tv_usec += diff;
+	}
 }
 
 double Target::getX() const {
@@ -75,7 +75,7 @@ void Target::draw() {
 	glEnd();
 }
 
-Target::Target() :centerX(0.0), centerY(0.0), xFactor(1.0), yFactor(1.0), moving(true) { this->theta = ((double)(rand() % (360))) * (PI/180.0); }
+Target::Target() :centerX(0.0), centerY(0.0), xFactor(1.0), yFactor(1.0), moving(true), isConfigured(false) { this->theta = ((double)(rand() % (360))) * (PI/180.0); }
 Target Target::operator=(const Target &source) {
 	Target instance;
 	instance.centerX = source.centerX;

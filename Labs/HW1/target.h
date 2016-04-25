@@ -1,15 +1,20 @@
 #ifndef TARGET_H
 #define TARGET_H
 #include "bullet.h"
+#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
 
 class Target {
 	private:
+		struct timeval time;
 		double centerX;
 		double centerY;
 		double xFactor;
 		double yFactor;
 		double theta;
 		bool moving;
+		bool isConfigured;
 
 	public:
 		const double RADIUS = 3.0;

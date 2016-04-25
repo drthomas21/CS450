@@ -1,17 +1,22 @@
-#include <windows.h>
 #include <iostream>
 #include <ctime>
-#include <gl/Gl.h>
-#include <gl/glu.h>
-#include "gl/glut.h"
+#include <cmath>
+#include <unistd.h>
 #include "bullet.h"
 #include "tank.h"
 #include "target.h"
 #include "lib.h"
 
-#include <iostream>
-#include <cmath>
-#include <fstream>
+#ifdef _WIN32
+	#include <windows.h>
+	#include <gl/Gl.h>
+	#include <gl/glu.h>
+	#include "gl/glut.h"
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+	#include <GL/glut.h>
+#endif
 
 const int screenWidth = 600;
 const int screenHeight = 600;
@@ -72,7 +77,11 @@ void myInit() {
 }
 
 void myDisplay() {
+	#ifdef _WIN32
 	Sleep(1);
+	#else
+	usleep(1);
+	#endif
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	drawGround();
@@ -91,7 +100,7 @@ void myIdle() {
 		bullet.incrTime();
 		glutPostRedisplay();
 		target.checkCollision(bullet);
-	}	
+	}
 }
 
 void myKeyboard(unsigned char theKey, int mouseX, int mouseY) {

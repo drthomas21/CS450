@@ -1,11 +1,11 @@
-#include <windows.h>   // use as needed for your system
 #include <iostream>
-#include <gl/Gl.h>
-#include <gl/glu.h>
+#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "bullet.h"
 #include "lib.h"
 #define GRAVITY 9.8
-#define VELOCITY 600.0
+#define BULLET_VELOCITY 600.0
 
 void Bullet::setX(double x) {
 	this->centerX= x;
@@ -26,10 +26,10 @@ void Bullet::setGroundLevel(double i) {
 void Bullet::fireBullet() {
 	this->fired = true;
 
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
+	struct timeval time;
+	gettimeofday(&time, NULL);
 
-	this->time = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL);
+	this->time = time.tv_usec;
 	this->_time = this->time;
 }
 
@@ -42,18 +42,18 @@ void Bullet::incrTime() {
 		return;
 	}
 
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
+	struct timeval _time;
+	gettimeofday(&_time, NULL);
 
-	long long diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->time; //nanoseconds
-	long long _diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->_time; //nanoseconds
-	double incr = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(10000000.0)); //seconds
-	double time = static_cast<double>(static_cast<long double>(_diff) / static_cast<long double>(10000000.0)); //seconds
+	long long diff = _time.tv_usec - this->time; //microseconds
+	long long _diff = _time.tv_usec - this->_time; //microseconds
+	double incr = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(1000000.0)); //seconds
+	double time = static_cast<double>(static_cast<long double>(_diff) / static_cast<long double>(1000000.0)); //seconds
 	std::cout << "incr: " << incr << std::endl;
 
 	//Do Math
-	this->centerX += VELOCITY * cos(this->theta) * static_cast<double>(incr);
-	this->centerY += VELOCITY * sin(this->theta) * incr - 0.5 * GRAVITY * time * time;
+	this->centerX += BULLET_VELOCITY * cos(this->theta) * static_cast<double>(incr);
+	this->centerY += BULLET_VELOCITY * sin(this->theta) * incr - 0.5 * GRAVITY * time * time;
 
 	this->time += diff;
 

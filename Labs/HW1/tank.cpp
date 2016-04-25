@@ -1,6 +1,3 @@
-#include <windows.h>   // use as needed for your system
-#include <gl/Gl.h>
-#include <gl/glu.h>
 #include "tank.h"
 #include "lib.h"
 
@@ -57,7 +54,7 @@ void Tank::draw() {
 	glVertex2d((this->centerX + 0.5), (this->centerY + height * 0.5 * scale));
 	glVertex2d((this->centerX + 0.5) + turrentRadius * cos(this->turrentDegree) * scale, (this->centerY + height * 0.5 * scale) + turrentRadius * sin(this->turrentDegree) * scale);
 	glEnd();
-	
+
 	//Body
 	glColor3f(0.0f / 255.0f, 102.0f / 255.0f, 34.0f / 255.0f);
 	glBegin(GL_POLYGON);
