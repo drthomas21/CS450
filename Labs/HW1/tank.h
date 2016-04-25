@@ -1,19 +1,23 @@
 #ifndef TANK_H
 #define TANK_H
 class Tank {
-	double centerX;
-	double centerY;
-	double turrentDegree;
+	private:
+		double centerX;
+		double centerY;
+		double turrentDegree;
 
-	void draw();
-	void setX(double);
-	void setY(double);
-	void setTurrentDegree(double degree);
-	double getX();
-	double getY();
-	double getTurrentDegree();
+	public:
+		void draw();
+		void setX(double);
+		void setY(double);
+		void setTurrentDegree(double degree);
+		double getX();
+		double getY();
+		double getTurrentDegree();
+		double getTurrentTipX();
+		double getTurrentTipY();
 
-	Tank();
-	Tank operator=(const Tank&);
+		Tank();
+		Tank operator=(const Tank&);
 };
 #endif
