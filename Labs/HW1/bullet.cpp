@@ -44,6 +44,7 @@ void Bullet::incrTime() {
 
 	FILETIME ft;
 	GetSystemTimeAsFileTime(&ft);
+
 	long long diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->time; //nanoseconds
 	long long _diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->_time; //nanoseconds
 	double incr = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(10000000.0)); //seconds
@@ -68,21 +69,20 @@ bool Bullet::wasFired() {
 	return this->fired;
 }
 
-double Bullet::getX() {
+double Bullet::getX() const {
 	return this->centerX;
 }
 
-double Bullet::getY() {
+double Bullet::getY() const {
 	return this->centerY;
 }
 
 void Bullet::draw() {
-	double radius = 1.25;
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_POLYGON);
 	for (double t = 0.0; t < 1.0; t += 0.005) {
-		GLfloat x = static_cast<float>((this->centerX) + (radius * (float)PI) * cos(2.0 * PI * t));
-		GLfloat y = static_cast<float>((this->centerY) + (radius * (float)PI) * sin(2.0 * PI * t));
+		GLfloat x = static_cast<float>((this->centerX) + (this->RADIUS * (float)PI) * cos(2.0 * PI * t));
+		GLfloat y = static_cast<float>((this->centerY) + (this->RADIUS * (float)PI) * sin(2.0 * PI * t));
 		glVertex2d(x, y);
 	}
 	glEnd();

@@ -12,6 +12,8 @@ class Bullet {
 		double groundLevel;
 
 	public:
+		const double RADIUS = 1.25;
+
 		void draw();
 		void setX(double);
 		void setY(double);
@@ -21,8 +23,8 @@ class Bullet {
 		void hitTarget();
 		void incrTime();
 		bool wasFired();
-		double getX();
-		double getY();
+		double getX() const;
+		double getY() const;
 
 		Bullet();
 		Bullet operator=(const Bullet&);

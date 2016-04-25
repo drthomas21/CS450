@@ -90,6 +90,7 @@ void myIdle() {
 	if (bullet.wasFired()) {
 		bullet.incrTime();
 		glutPostRedisplay();
+		target.checkCollision(bullet);
 	}	
 }
 
