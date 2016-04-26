@@ -1,7 +1,6 @@
 #include <iostream>
 #include <ctime>
 #include <cmath>
-#include <unistd.h>
 #include "bullet.h"
 #include "tank.h"
 #include "target.h"
@@ -28,6 +27,7 @@ void myIdle();
 void myDisplay();
 void myKeyboard(unsigned char, int, int);
 void mySpecialKeyboard(int, int, int);
+void myMouse(int, int);
 
 void drawGround();
 
@@ -36,7 +36,7 @@ Tank tank;
 Target target;
 
 int main(int argc, char** argv) {
-	srand(time(NULL));
+	srand(std::time(NULL));
 	glutInit(&argc, argv);          // initialize the toolkit
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); // set display mode
 	glutInitWindowSize(screenWidth, screenHeight); // set window size
@@ -47,14 +47,16 @@ int main(int argc, char** argv) {
 	glutIdleFunc(myIdle);			// register idle callback function
 	glutKeyboardFunc(myKeyboard);
 	glutSpecialFunc(mySpecialKeyboard);
+	glutMotionFunc(myMouse);
 
 	//Random location for tank
-	tank.setX(rand() % screenWidth);
+	tank.setX(25.0);
 	tank.setY(25.0);
+	tank.setTurrentDegree(PI / 4.0);
 
 	//Random location for target
 	target.setX(rand() % screenWidth);
-	target.setY((rand() % (screenHeight - 50)) + 50.0);
+	target.setY((rand() % (screenHeight - 20)) + 20.0);
 
 	bullet.setGroundLevel(20);
 
@@ -77,11 +79,7 @@ void myInit() {
 }
 
 void myDisplay() {
-	#ifdef _WIN32
 	Sleep(1);
-	#else
-	usleep(1);
-	#endif
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	drawGround();
@@ -97,10 +95,29 @@ void myDisplay() {
 
 void myIdle() {
 	if (bullet.wasFired()) {
-		bullet.incrTime();
-		glutPostRedisplay();
+		bullet.incrTime();		
 		target.checkCollision(bullet);
 	}
+
+	if(target.isMoving()) target.calculatePosition();
+
+	if (target.getX() <= 0.0) {
+		target.setX(1.0);
+		target.flipVelocityX();
+	} else if (target.getX() >= screenWidth) {
+		target.setX(screenHeight - 1);
+		target.flipVelocityX();
+	}
+
+	if (target.getY() <= 20.0) {
+		target.setY(21.0);
+		target.flipVelocityY();
+	} else if (target.getY() >= screenHeight) {
+		target.setY(screenHeight - 1);
+		target.flipVelocityY();
+	}
+
+	glutPostRedisplay();
 }
 
 void myKeyboard(unsigned char theKey, int mouseX, int mouseY) {
@@ -108,24 +125,48 @@ void myKeyboard(unsigned char theKey, int mouseX, int mouseY) {
 	switch (theKey) {
 		case 'a':
 		case 'A':
-			value = tank.getX() - 10.0;
+			value = tank.getX() - 5.0;
 			tank.setX(value >= 0.0 ? value : 0.0);
 			break;
 		case 'd':
 		case 'D':
-			value = tank.getX() + 10.0;
+			value = tank.getX() + 5.0;
 			tank.setX(value <= (double)screenWidth ? value : (double)screenWidth);
 			break;
 
 		case 'w':
 		case 'W':
 			value = tank.getTurrentDegree() + PI / 20.0;
-			tank.setTurrentDegree(value <= PI ? value : PI);
+			tank.setTurrentDegree(value <= PI / 2.0 ? value : PI / 2.0);
+			break;
+		case 'm':
+		case 'M':
+			target.toggleMovement();
 			break;
 		case 's':
 		case 'S':
 			value = tank.getTurrentDegree() - PI / 20.0;
 			tank.setTurrentDegree(value >= 0.0 ? value : 0.0);
+			break;
+		case '+':
+			value = target.getVelocity() + 40;
+			target.setVelocity(value);
+			break;
+		case '-':
+			value = target.getVelocity() - 40;
+			if (value > 0) {
+				target.setVelocity(value);
+			}
+			break;	
+		case 'q':
+		case 'Q':
+			return exit(0);
+			break;
+		case 27:
+			target.setX(rand() % screenWidth);
+			target.setY((rand() % (screenHeight - 20)) + 20.0);
+			target.setVelocity(TARGET_VELOCITY);
+			tank.setX(25.0);
 			break;
 		case ' ':
 			if (bullet.wasFired()) {
@@ -145,7 +186,36 @@ void myKeyboard(unsigned char theKey, int mouseX, int mouseY) {
 }
 
 void mySpecialKeyboard(int theKey, int mouseX, int mouseY) {
-	std::cout << "thSpecialeKey: " << theKey << std::endl;
+	double value = 0.0;
+	switch (theKey) {
+		case GLUT_KEY_UP:
+			if (!bullet.wasFired()) {
+				bullet.setVelocity(bullet.getVelocity() + 50.0);
+			}
+			break;
+		case GLUT_KEY_DOWN:
+			value = bullet.getVelocity() - 50.0;
+			if (value > 200 && !bullet.wasFired()) {
+				bullet.setVelocity(value);
+			}
+			break;
+		default:
+			std::cout << "theSpecialeKey: " << theKey << std::endl;
+			break;
+	}
+}
+
+void myMouse(int x, int y) {
+	std::cout << "Mouse Y: " << y << std::endl;
+	double degree = ((double)(screenHeight - y) / (double)screenHeight) * PI / 4.0;
+	std::cout << "Degree: " << degree << std::endl;
+	if (degree > PI / 4.0) {
+		degree = PI / 4.0;
+	} else if (degree < 0.0) {
+		degree = 0;
+	}
+	tank.setX(x);
+	tank.setTurrentDegree(degree);
 }
 
 void drawGround() {

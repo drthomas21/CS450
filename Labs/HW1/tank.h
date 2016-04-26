@@ -18,6 +18,5 @@ class Tank {
 		double getTurrentTipY();
 
 		Tank();
-		Tank operator=(const Tank&);
 };
 #endif

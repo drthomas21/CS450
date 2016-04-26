@@ -85,10 +85,3 @@ void Tank::draw() {
 }
 
 Tank::Tank() :centerX(0.0), centerY(0.0), turrentDegree(0.0) { }
-Tank Tank::operator=(const Tank &source) {
-	Tank instance;
-	instance.centerX = source.centerX;
-	instance.centerY = source.centerY;
-	instance.turrentDegree = source.turrentDegree;
-	return instance;
-}

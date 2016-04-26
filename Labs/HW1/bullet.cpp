@@ -1,18 +1,20 @@
 #include <iostream>
-#include <sys/time.h>
 #include <stdio.h>
-#include <unistd.h>
 #include "bullet.h"
 #include "lib.h"
-#define GRAVITY 9.8
-#define BULLET_VELOCITY 600.0
 
 void Bullet::setX(double x) {
 	this->centerX= x;
+	this->_centerX = x;
 }
 
 void Bullet::setY(double y) {
 	this->centerY = y;
+	this->_centerY = y;
+}
+
+void Bullet::setVelocity(double v) {
+	this->velocity = v;
 }
 
 void Bullet::setTheta(double d) {
@@ -26,11 +28,12 @@ void Bullet::setGroundLevel(double i) {
 void Bullet::fireBullet() {
 	this->fired = true;
 
-	struct timeval time;
-	gettimeofday(&time, NULL);
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
 
-	this->time = time.tv_usec;
-	this->_time = this->time;
+	this->time = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL);
+
+	if (DEBUG_ENABLE_BULLET_PATH) this->bulletVector.clear();
 }
 
 void Bullet::hitTarget() {
@@ -42,22 +45,31 @@ void Bullet::incrTime() {
 		return;
 	}
 
-	struct timeval _time;
-	gettimeofday(&_time, NULL);
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
 
-	long long diff = _time.tv_usec - this->time; //microseconds
-	long long _diff = _time.tv_usec - this->_time; //microseconds
-	double incr = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(1000000.0)); //seconds
-	double time = static_cast<double>(static_cast<long double>(_diff) / static_cast<long double>(1000000.0)); //seconds
-	std::cout << "incr: " << incr << std::endl;
+	long long diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->time; //nanoseconds
+	double time = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(10000000.0)); //seconds
 
 	//Do Math
-	this->centerX += BULLET_VELOCITY * cos(this->theta) * static_cast<double>(incr);
-	this->centerY += BULLET_VELOCITY * sin(this->theta) * incr - 0.5 * GRAVITY * time * time;
+	this->centerX = this->_centerX + this->velocity * cos(this->theta) * time;
+	this->centerY = this->_centerY + this->velocity * sin(this->theta) * time - 0.5 * GRAVITY * time * time;
 
-	this->time += diff;
+	if (DEBUG_ENABLE_BULLET) {
+		double velocityY = this->velocity * sin(this->theta) - GRAVITY * time;
+		double velocityX = this->velocity * cos(this->theta);
 
-	std::cout << "Bullet: " << this->centerX << ", " << this->centerY << std::endl;
+		std::cout << "Velocity X: " << velocityX << " | Velocity Y: " << velocityY << std::endl;
+	}
+
+	if (DEBUG_ENABLE_BULLET_PATH) {
+		GLfloatPoint2D point;
+		point.x = this->centerX;
+		point.y = this->centerY;
+		this->bulletVector.push_back(point);
+	}
+
+	if(DEBUG_ENABLE_BULLET) std::cout << "Bullet: " << this->centerX << ", " << this->centerY << std::endl;
 
 	//Check
 	if (this->centerY <= this->groundLevel) {
@@ -77,6 +89,24 @@ double Bullet::getY() const {
 	return this->centerY;
 }
 
+double Bullet::getTheta() const {
+	return this->theta;
+}
+
+double Bullet::getVelocity() const {
+	return this->velocity;
+}
+
+double Bullet::getEllapseTime() const {
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
+
+	long long diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->time; //nanoseconds
+	double time = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(10000000.0)); //seconds
+
+	return time;
+}
+
 void Bullet::draw() {
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_POLYGON);
@@ -86,12 +116,14 @@ void Bullet::draw() {
 		glVertex2d(x, y);
 	}
 	glEnd();
+
+	if (DEBUG_ENABLE_BULLET_PATH) {
+		glBegin(GL_POINTS);
+		for (size_t i = 0; i < this->bulletVector.size(); i++) {
+			glVertex2d(this->bulletVector[i].x, this->bulletVector[i].y);
+		}
+		glEnd();
+	}
 }
 
-Bullet::Bullet() :centerX(0.0), centerY(0.0), time(0), theta(0.0), groundLevel(0.0), fired(false) { }
-Bullet Bullet::operator=(const Bullet &source) {
-	Bullet instance;
-	instance.centerX = source.centerX;
-	instance.centerY = source.centerY;
-	return instance;
-}
+Bullet::Bullet() :centerX(0.0), centerY(0.0), time(0), theta(0.0), groundLevel(0.0), fired(false), velocity(BULLET_VELOCITY) { }
