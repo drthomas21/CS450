@@ -6,22 +6,15 @@
 #include <gl/Glu.h>
 #include "gl/glut.h"
 #include "Ball.h"
-#define PI 3.141592653589793
-#define ROBOT_FORCE 20.0
-#define GRAVITY 9.8
-#define MAX_ANGLE_FINGER 30.0
-#define MAX_ANGLE_HAND 45.0
-#define MAX_ANGLE_ELBOW 100.0
-#define MAX_ANGLE 80.0
 
 class Robot {
 private:
 	Ball ball;
 	GLdouble rotate;
-	double angleShoulder;
-	double angleArm;
-	double angleHand;
-	double angleFinger;
+	GLdouble angleShoulder;
+	GLdouble angleArm;
+	GLdouble angleHand;
+	GLdouble angleFinger;
 	bool isActived;
 	bool isWireframe;
 	bool isAnimating;
@@ -49,6 +42,7 @@ public:
 
 	void toggleActivation();
 	void toggleWireframe();
+	void toggleAnimation();
 	void startAnimation();
 	void stopAnimation();
 	void reset();
@@ -60,10 +54,10 @@ public:
 	GLdouble getUpperArmLength() const;
 	GLdouble getLowerArmLength() const;
 	GLdouble getFingerSegmentLength() const;
-	double getShoulderAngle() const;
-	double getArmAngle() const;
-	double getHandAngle() const;
-	double getFingerAngle() const;
+	GLdouble getShoulderAngle() const;
+	GLdouble getArmAngle() const;
+	GLdouble getHandAngle() const;
+	GLdouble getFingerAngle() const;
 	unsigned int getNumberOfFingers() const;
 
 	void draw();

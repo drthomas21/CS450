@@ -5,17 +5,16 @@
 #include <gl/Gl.h>
 #include <gl/Glu.h>
 #include "gl/glut.h"
-#define PI 3.141592653589793
-#define GRAVITY 9.8
-#define AIR_FRICTION 0.47
-#define BALL_MASS 0.453592
 
 class Ball {
 private:
 	GLdouble x;
 	GLdouble y;
 	GLdouble z;
-	double radius;
+	GLdouble boundryHeight;
+	GLdouble boundryWidth;
+	GLdouble radius;
+	GLdouble rotated;
 	double theta;
 	double velocity;
 	bool isAnimating;
@@ -26,8 +25,11 @@ public:
 	void setY(GLdouble);
 	void setZ(GLdouble);
 	void setRadius(GLdouble);
+	void setRotated(GLdouble);
 	void setTheta(GLdouble);
 	void setVelocity(GLdouble);
+	void setBoundryHeight(GLdouble);
+	void setBoundryWidth(GLdouble);
 
 	void showBall();
 	void hideBall();
@@ -39,13 +41,14 @@ public:
 	GLdouble getY();
 	GLdouble getZ();
 	GLdouble getRadius();
+	GLdouble getRotated();
 	GLdouble getTheta();
 	GLdouble getVelocity();
 	GLdouble getForce();
 	GLdouble getMass();
 
 	void animate();
-	void draw(bool, GLdouble);
+	void draw(bool);
 
 	Ball();
 };

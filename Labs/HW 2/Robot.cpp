@@ -1,8 +1,9 @@
 #include "Robot.h"
+#include "lib.h"
 #include <math.h>
 #include <iostream>
 
-GLdouble _theta1, _theta2;
+GLdouble _theta1, _theta2, acceleration, t1, t2;
 
 void Robot::setX(GLdouble n) {
 	this->x += n;
@@ -16,6 +17,14 @@ void Robot::setZ(GLdouble n) {
 void Robot::setRotate(GLdouble n) {
 	if (!this->isActived) return;
 	this->rotate += n;
+
+	while (this->rotate < 0) {
+		this->rotate += 360.0;
+	}
+
+	while (this->rotate > 360.0) {
+		this->rotate -= 360.0;
+	}
 }
 void Robot::setLowerArmLength(GLdouble n) {
 	this->lengthLowerArm = n;
@@ -29,38 +38,38 @@ void Robot::setFingerSegmentLength(GLdouble n) {
 void Robot::setShoulderAngle(double n) {
 	if (!this->isActived) return;
 	this->angleShoulder += n;
-	if (this->angleShoulder < -MAX_ANGLE) {
-		this->angleShoulder = -MAX_ANGLE;
-	} else if (this->angleShoulder > MAX_ANGLE) {
-		this->angleShoulder = MAX_ANGLE;
+	if (this->angleShoulder < -max_angle) {
+		this->angleShoulder = -max_angle;
+	} else if (this->angleShoulder > max_angle) {
+		this->angleShoulder = max_angle;
 	}
 	std::cout << "Shoulder: " << this->angleShoulder << std::endl;
 }
 void Robot::setArmAngle(double n) {
 	if (!this->isActived) return;
 	this->angleArm += n;
-	if (this->angleArm < -MAX_ANGLE_ELBOW) {
-		this->angleArm = -MAX_ANGLE_ELBOW;
-	} else if (this->angleArm > MAX_ANGLE_ELBOW) {
-		this->angleArm = MAX_ANGLE_ELBOW;
+	if (this->angleArm < -max_angle_elbow) {
+		this->angleArm = -max_angle_elbow;
+	} else if (this->angleArm > max_angle_elbow) {
+		this->angleArm = max_angle_elbow;
 	}
 	std::cout << "Elbow: " << this->angleArm << std::endl;
 }
 void Robot::setHandAngle(double n) {
 	if (!this->isActived) return;
 	this->angleHand += n;
-	if (this->angleHand < -MAX_ANGLE_HAND) {
-		this->angleHand = -MAX_ANGLE_HAND;
-	} else if (this->angleHand > MAX_ANGLE_HAND) {
-		this->angleHand = MAX_ANGLE_HAND;
+	if (this->angleHand < -max_angle_hand) {
+		this->angleHand = -max_angle_hand;
+	} else if (this->angleHand > max_angle_hand) {
+		this->angleHand = max_angle_hand;
 	}
 	std::cout << "Hand: " << this->angleHand << std::endl;
 }
 void Robot::setFingerAngle(double n) {
 	if (!this->isActived) return;
 	this->angleFinger += n;
-	if (this->angleFinger < -MAX_ANGLE_FINGER) {
-		this->angleFinger = -MAX_ANGLE_FINGER;
+	if (this->angleFinger < -max_angle_finger) {
+		this->angleFinger = -max_angle_finger;
 	} else if (this->angleFinger > 0) {
 		this->angleFinger = 0;
 	}
@@ -78,6 +87,14 @@ void Robot::toggleWireframe() {
 	this->isWireframe = !this->isWireframe;
 }
 
+void Robot::toggleAnimation() {
+	if (this->isAnimating) {
+		this->stopAnimation();
+	} else {
+		this->startAnimation();
+	}
+}
+
 void Robot::startAnimation() {
 	FILETIME ft;
 	GetSystemTimeAsFileTime(&ft);
@@ -85,25 +102,38 @@ void Robot::startAnimation() {
 	this->isAnimating = true;
 	this->time = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL);
 
-	this->angleFinger = -MAX_ANGLE_FINGER;
+	this->angleFinger = -max_angle_finger;
 	if (this->angleArm == 0 && this->angleShoulder == 0) {
 		this->angleHand = 0;
 	}
 	else if (this->angleArm <= 0 && this->angleShoulder <= 0) {
-		this->angleHand = MAX_ANGLE_HAND;
+		this->angleHand = max_angle_hand;
 	}
 	else if (this->angleArm >= 0 && this->angleShoulder >= 0) {
-		this->angleHand = -MAX_ANGLE_HAND;
+		this->angleHand = -max_angle_hand;
 	}
 	else if (abs(this->angleArm) < abs(this->angleShoulder)) {
-		this->angleHand = MAX_ANGLE_HAND;
+		this->angleHand = max_angle_hand;
 	}
 	else if (abs(this->angleArm) > (this->angleShoulder)) {
-		this->angleHand = -MAX_ANGLE_HAND;
+		this->angleHand = -max_angle_hand;
 	}
 
 	_theta1 = this->angleArm;
 	_theta2 = this->angleShoulder;
+
+	acceleration = (robot_force - this->ball.getForce()) / this->ball.getMass();
+
+	t1 =
+		pow(abs((
+		(2.0 * pi * this->lengthLowerArm * 0.25)
+			- (2.0 * pi * this->lengthLowerArm * (90.0 + this->angleArm) / 360.0))
+			/ acceleration), 0.5);
+	t2 =
+		pow(abs((
+		(2.0 * pi * this->lengthUpperArm * 0.25)
+			- (2.0 * pi * this->lengthUpperArm * (90.0 + this->angleShoulder) / 360.0))
+			/ acceleration), 0.5);
 
 	this->ball.reset();
 	this->ball.showBall();
@@ -111,21 +141,24 @@ void Robot::startAnimation() {
 
 void Robot::stopAnimation() {
 	this->isAnimating = false;
+
+	this->ball.setVelocity(2.0 * acceleration * (t1 > t2 ? t1 : t2));
+	this->ball.setTheta((180 + this->angleShoulder + this->angleArm) * (pi / 180.0));
+	this->ball.setRotated(this->rotate * (pi / 180.0));
+	this->ball.startAnimation();
 }
 
 void Robot::reset() {
-	if (this->isAnimating) {
-		this->angleArm = 0;
-		this->angleFinger = 0;
-		this->angleHand = 0;
-		this->angleShoulder = 0;
-		this->rotate = 0;
-	}
+	this->angleArm = 0;
+	this->angleFinger = 0;
+	this->angleHand = 0;
+	this->angleShoulder = 0;
+	this->rotate = 0;
 
 	this->isActived = false;
 	this->isAnimating = false;
 	this->isWireframe = false;
-	this->ball.hideBall();
+	this->ball.reset();
 }
 
 GLdouble Robot::getX() const {
@@ -149,16 +182,16 @@ GLdouble Robot::getUpperArmLength() const {
 GLdouble Robot::getFingerSegmentLength() const {
 	return this->lengthFingerSegment;
 }
-double Robot::getShoulderAngle() const {
+GLdouble Robot::getShoulderAngle() const {
 	return this->angleShoulder;
 }
-double Robot::getArmAngle() const {
+GLdouble Robot::getArmAngle() const {
 	return this->angleArm;
 }
-double Robot::getHandAngle() const {
+GLdouble Robot::getHandAngle() const {
 	return this->angleHand;
 }
-double Robot::getFingerAngle() const {
+GLdouble Robot::getFingerAngle() const {
 	return this->angleFinger;
 }
 unsigned int Robot::getNumberOfFingers() const {
@@ -167,15 +200,35 @@ unsigned int Robot::getNumberOfFingers() const {
 
 void Robot::draw() {
 	//Draw Ball
-	GLdouble x = (this->lengthUpperArm + 0.0) * cos((90.0 + this->angleShoulder) * (PI / 180.0)) + this->lengthLowerArm * cos((90.0 + this->angleShoulder + this->angleArm) * (PI / 180.0)) + 3.0 * cos((90.0 + this->angleShoulder + this->angleArm + this->angleHand) * (PI / 180.0)) + this->getX();
-	GLdouble y = (this->lengthUpperArm + 3.0) * sin((90.0 + this->angleShoulder) * (PI / 180.0)) + this->lengthLowerArm * sin((90.0 + this->angleShoulder + this->angleArm) * (PI / 180.0)) + 3.0 * sin((90.0 + this->angleShoulder + this->angleArm + this->angleHand) * (PI / 180.0)) + this->getY();
-	GLdouble z = this->getZ();
+	GLdouble x =
+		this->lengthUpperArm * cos((90.0 + this->angleShoulder) * (pi / 180.0)) +
+		this->lengthLowerArm * cos((90.0 + this->angleShoulder + this->angleArm) * (pi / 180.0)) +
+		3.5 * cos((90.0 + this->angleShoulder + this->angleArm + this->angleHand) * (pi / 180.0));
+	x *= cos(this->rotate);
+	x += this->getX();
+
+	GLdouble y = 
+		3.0 + this->lengthUpperArm * sin((90.0 + this->angleShoulder) * (pi / 180.0)) + 
+		this->lengthLowerArm * sin((90.0 + this->angleShoulder + this->angleArm) * (pi / 180.0)) + 
+		3.5 * sin((90.0 + this->angleShoulder + this->angleArm + this->angleHand) * (pi / 180.0)) + 
+		this->getY();
+
+	GLdouble z = 
+		this->lengthUpperArm * cos((90.0 + this->angleShoulder) * (pi / 180.0)) +
+		this->lengthLowerArm * cos((90.0 + this->angleShoulder + this->angleArm) * (pi / 180.0)) +
+		3.5 * cos((90.0 + this->angleShoulder + this->angleArm + this->angleHand) * (pi / 180.0));
+	z *= sin(this->rotate);
+	z += this->getZ();
+
+	glPushMatrix();
 	if (this->isAnimating) {
 		this->ball.setX(x);
 		this->ball.setY(y);
 		this->ball.setZ(z);
+		//glRotated(this->rotate, 0, 1, 0);
 	}
-	this->ball.draw(this->isWireframe,this->rotate);
+	this->ball.draw(this->isWireframe);
+	glPopMatrix();
 
 	glColor3d(0.4, 0.4, 0.4);
 	glTranslated(this->x, this->y, this->z);
@@ -363,59 +416,38 @@ void Robot::animate() {
 	this->ball.animate();
 	if (!this->isAnimating) return;
 
-	bool tossLeft = true;
-	GLdouble acceleration = 0;
 	GLdouble velocity = 0;
 
 	if (this->angleHand == 0) {
 		this->ball.setVelocity(0.0);
 		this->isAnimating = 0;
 	} else {
-		GLdouble t1 = 0;
-		GLdouble t2 = 0;
-
 		FILETIME ft;
 		GetSystemTimeAsFileTime(&ft);
 
 		long long diff = static_cast<long long>(ft.dwLowDateTime) + (static_cast<long long>(ft.dwHighDateTime) << 32LL) - this->time; //nanoseconds
 		double time = static_cast<double>(static_cast<long double>(diff) / static_cast<long double>(10000000.0)); //seconds
 
-		acceleration = (ROBOT_FORCE - this->ball.getForce()) / this->ball.getMass();
-		t1 = 
-		pow(((
-			(2.0 * 2.0 * PI * this->lengthLowerArm * 0.25) 
-			- (2.0 * PI * this->lengthLowerArm * this->angleArm / 360.0)) 
-			/ acceleration), 0.5);
-		t2 = 
-		pow(((
-			(2.0 * 2.0 * PI * this->lengthUpperArm * 0.25)
-			- (2.0 * PI * this->lengthUpperArm * this->angleArm / 360.0))
-			/ acceleration), 0.5);
-
-		if (time <= t1) {
-			this->angleArm = _theta1 * (t1 - time);
+		if (time <= t1 && t1 != 0) {
+			this->angleArm = _theta1 * (1.0 - time / t1);
+		} else if (time > t1 && this->angleArm != 0.0) {
+			this->angleArm = 0;
 		}
 		
-		if(time <= t2) {
-			this->angleShoulder = _theta2 * (t2 - time);
+		if(time <= t2 && t2 != 0) {
+			this->angleShoulder = _theta2 * (1.0 - time / t2);
+		} else if(time > t2 && this->angleShoulder != 0.0) {
+			this->angleShoulder = 0;
 		}
 
 		if (time > t1 && time > t2) {
-			this->isAnimating = false;
-
-			this->ball.setVelocity(pow(2.0 * acceleration *
-				((2.0 * 2.0 * PI * this->lengthLowerArm * 0.25) - (2.0 * PI * this->lengthLowerArm * this->angleArm / 360.0)
-					+ (2.0 * 2.0 * PI * this->lengthUpperArm * 0.25) - (2.0 * PI * this->lengthUpperArm * this->angleArm / 360.0))
-				, 0.5));
-			this->ball.setTheta(PI);
-
-			this->ball.startAnimation();
-		} else {
-		
-		}
+			this->stopAnimation();			
+		} 
 	}
 }
 
 Robot::Robot():x(0),y(0),z(0),angleShoulder(0),angleArm(0),angleHand(0),angleFinger(0),lengthFingerSegment(3.0),lengthUpperArm(12.0),lengthLowerArm(9.0),rotate(0), numOfFingers(5) { 
 	this->ball.setRadius(2.2);
+	this->ball.setBoundryHeight((this->lengthUpperArm + this->lengthUpperArm + this->lengthFingerSegment *2.0) * 1.10);
+	this->ball.setBoundryWidth((this->lengthUpperArm + this->lengthUpperArm + this->lengthFingerSegment *2.0) * 1.10);
 }

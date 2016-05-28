@@ -10,12 +10,12 @@
 Robot robot;
 
 const int screenWidth = 500, screenHeight = 500;
-const float worldWidth = 500.0, worldHeight = 500.0, degreeSegement = 35.0;
+const float worldWidth = 500.0, worldHeight = 500.0, degreeSegement = 40.0;
 
 bool showCoords = false;
 
 // global values for camera
-GLdouble eyex = 50.0, eyey = 5.0, eyez = 50.0;
+GLdouble eyex = 25.0, eyey = 17.5, eyez = 25.0;
 GLdouble lookx = 0.0, looky = 0.0, lookz = 0.0;
 
 // global values for shading
@@ -24,7 +24,7 @@ GLfloat diffuse[] = { 0.6f, 0.6f, 0.6f, 1.0f };
 GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 GLfloat shininess[] = { 50.0f };
 
-GLfloat position[] = { 2.0f, 6.0f, 3.0f, 0.0f };
+GLfloat position[] = { 10.0f, 6.0f, 15.0f, 0.0f };
 GLfloat lightIntensity[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 
 void myInit();
@@ -72,8 +72,8 @@ void myInit() {
 
 	glMatrixMode(GL_PROJECTION); // set the view volume shape
 	glLoadIdentity();
-	glOrtho(-3.5*worldWidth / worldHeight, 3.5*worldWidth / worldHeight, -3.5, 3.5, 0.1, 100);
-	//glFrustum(-3.5, 3.5, -3.5*worldWidth / worldHeight, 3.5*worldWidth / worldHeight, 0.1, 100);
+	//glOrtho(-3.5*worldWidth / worldHeight, 3.5*worldWidth / worldHeight, -3.5, 3.5, 100, 100000);
+	glFrustum(-1.5, 1.5, -1.5, 1.5, 1, 110);
 }
 
 void myIdle() {
@@ -109,7 +109,7 @@ void displaySystem() {
 	}	
 
 	glPushMatrix();
-		glScaled(0.1, 0.1, 0.1);
+		//glScaled(0.1, 0.1, 0.1);
 		glColor3d(0.4, 0.4, 0.4);
 		robot.draw();
 	glPopMatrix();
@@ -170,7 +170,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 			break;
 		case 'a':
 		case 'A':
-			robot.startAnimation();
+			robot.toggleAnimation();
 			break;
 	}
 	glutPostRedisplay();

@@ -1,0 +1,6 @@
+﻿  Lab-Camera.cpp
+c:\users\david_000\documents\github\cs450\labs\lab8\lab-camera.cpp(44): warning C4838: conversion from 'double' to 'GLfloat' requires a narrowing conversion
+c:\users\david_000\documents\github\cs450\labs\lab8\lab-camera.cpp(45): warning C4838: conversion from 'double' to 'GLfloat' requires a narrowing conversion
+  camera.cpp
+  Generating Code...
+  Lab8.vcxproj -> C:\Users\david_000\Documents\GitHub\CS450\Labs\Debug\Lab8.exe
