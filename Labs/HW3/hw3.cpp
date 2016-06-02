@@ -1,16 +1,15 @@
-#include <windows.h>
-#include <gl/Gl.h>
-#include <gl/Glu.h>
-#include "gl/glut.h"
-#include "Room.h"
+#ifndef LIB_H
 #include "lib.h"
+#endif
+#include "Room.h"
 #include <iostream>
 
 #define PI 3.141592653589793
 
 Room room;
 
-bool showCoords = false;
+bool capture = false;
+GLdouble cameraOffsetX = 0, cameraOffsetY = 0, prevCameraX = 0, prevCameraY = 0;
 
 // global values for camera
 GLdouble eyex = 25.0, eyey = 5.0, eyez = 25.0;
@@ -30,7 +29,8 @@ void myIdle();
 void myDisplay();
 void myKeyboard(unsigned char, int, int);
 void mySpecialKeys(int, int, int);
-void myMouse(int, int);
+void myMouse(int, int, int, int);
+void myMousePassive(int, int);
 
 int main(int argc, char **argv) {
 	glutInit(&argc, argv);          // initialize the toolkit
@@ -45,8 +45,30 @@ int main(int argc, char **argv) {
 	glutIdleFunc(myIdle);
 	glutKeyboardFunc(myKeyboard);
 	glutSpecialFunc(mySpecialKeys);
-	glutMotionFunc(myMouse);
-	glutPassiveMotionFunc(myMouse);
+	glutMouseFunc([](int button, int state, int x, int y) {
+		switch (button) {
+		case GLUT_LEFT_BUTTON:
+			capture = state == 0;
+			if (capture) {
+				prevCameraX = screenWidth / 2.0;
+				prevCameraY = screenHeight / 2.0;
+				glutWarpPointer(screenWidth / 2.0, screenHeight / 2.0);
+			}
+			break;
+		}
+	});
+	glutMotionFunc([](int x, int y) {		
+		if (capture && x >= 0 && x <= screenWidth && y >= 0 && y <= screenHeight) {
+			cameraOffsetX += x - prevCameraX;
+			cameraOffsetY += y - prevCameraY;
+			prevCameraX = x;
+			prevCameraY = y;
+
+			if (cameraOffsetY < 0.25) cameraOffsetY = 0.25;
+			if (cameraOffsetY > 150) cameraOffsetY = 150;
+			room.updateCamera(cameraOffsetX, cameraOffsetY);
+		}
+	});
 	//glutMouseFunc
 
 	glutMainLoop();
@@ -59,7 +81,7 @@ void myInit() {
 	glEnable(GL_LIGHT0);
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_NORMALIZE);
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 
 	glLightfv(GL_LIGHT0, GL_POSITION, position);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightIntensity);
@@ -85,6 +107,7 @@ void myIdle() {
 void myDisplay() {
 	Sleep(1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);     // clear the screen
+	glEnable(GL_DEPTH_TEST);
 
 	glPushMatrix();
 		room.draw();
@@ -106,15 +129,15 @@ void myKeyboard(unsigned char key, int x, int y) {
 		break;
 	case 'q':
 	case 'Q':
-		room.getRobot()->doAttack(1);
+		room.getRobot()->doAttack(1,room.getTime());
 		break;
 	case 'w':
 	case 'W':
-		room.getRobot()->doAttack(2);
+		room.getRobot()->doAttack(2,room.getTime());
 		break;
 	case 'e':
 	case 'E':
-		room.getRobot()->doAttack(3);
+		room.getRobot()->doAttack(3,room.getTime());
 	}
 	glutPostRedisplay();
 }
@@ -135,23 +158,32 @@ void mySpecialKeys(int key, int x, int y) {
 	glutPostRedisplay();
 }
 
-void myMouse(int x, int y) {
+void myMouse(int button, int state, int x, int y) {
+	switch (button) {
+		case GLUT_LEFT_BUTTON:
+			capture = state == 1;
+			break;
+	}
+}
+
+
+void myMousePassive(int x, int y) {
+	if (!capture) return;
 	if (x < 0) {
-		x = 0;
+		glutWarpPointer(0, y);
 	} else if (x > screenWidth) {
-		x = screenWidth;
+		glutWarpPointer(screenWidth, y);
 	}
 
 	GLdouble _x = static_cast<GLdouble>(screenWidth) / 2.0 - static_cast<GLdouble>(x);
 
 	if (y < 0) {
-		y = 0;
+		glutWarpPointer(x, 0);
 	} else if (y > screenHeight) {
-		y = screenHeight;
+		glutWarpPointer(x, screenHeight);
 	}
 
 	GLdouble _y = static_cast<GLdouble>(screenHeight) / 2.0 - static_cast<GLdouble>(y);
 
 	room.updateCamera((_x / static_cast<GLdouble>(screenWidth) * 2.0), (_y / static_cast<GLdouble>(screenHeight) / 2.0));
-	
 }

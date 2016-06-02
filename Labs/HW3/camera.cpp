@@ -1,7 +1,6 @@
 //Camera Class
 #include <math.h>
 #include <stdlib.h>
-#include "lib.h"
 #include "camera.h"
 
 Camera::Camera()

@@ -7,6 +7,7 @@
 
 class Enemy {
 private:
+	unsigned int hitCount;
 	GLdouble rotated;
 	GLdouble x;
 	GLdouble y;
@@ -24,10 +25,14 @@ public:
 	GLdouble getHeadSize();
 	GLdouble getRotated();
 
+	bool isAlive();
+
 	void setX(GLdouble);
 	void setY(GLdouble);
 	void setZ(GLdouble);
 	void setRotated(GLdouble);
+	void wasHit();
+	void reset();
 	void animate(int);
 	void draw();
 

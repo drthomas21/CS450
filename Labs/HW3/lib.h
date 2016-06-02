@@ -15,6 +15,8 @@ const double max_angle_finger = 30.0;
 const double max_angle_hand = 90.0;
 const double max_angle_elbow = 100.0;
 const double max_angle = 80.0;
-const int screenWidth = 500, screenHeight = 500;
-const float worldWidth = 500.0, worldHeight = 500.0, degreeSegement = 40.0;
+const int screenWidth = 800, screenHeight = 600;
+const float worldWidth = 800, worldHeight = 600, degreeSegement = 40.0;
+const GLdouble cameraSensitivity = 0.04;
+const unsigned int enemyHitPoints = 2, robotHitPoints = 10;
 #endif // !LIB_H

@@ -2,6 +2,10 @@
 #include <iostream>
 
 GLdouble footSize = 7, bodySize = 5, bodyLength = 3.5, headSize = 9;
+
+bool Enemy::isAlive() {
+	return this->hitCount < enemyHitPoints;
+}
 GLdouble Enemy::getX() {
 	return this->x;
 }
@@ -27,9 +31,15 @@ GLdouble Enemy::getHeadSize() {
 
 void Enemy::applySkinMaterial() {
 	GLfloat mat[4], ambr, ambg, ambb, difr, difg, difb, specr, specg, specb, shine;
-	ambr = 0.2, ambg = 0.55, ambb = 0.15;
-	difr = 0.3, difg = 0.6, difb = 0.2;
-	specr = 0.574597, specg = 0.774597, specb = 0.474597;
+	if (this->hitCount == 1) {
+		ambr = 0.2, ambg = 0.55, ambb = 0.15;
+		difr = 0.3, difg = 0.6, difb = 0.2;
+		specr = 0.574597, specg = 0.774597, specb = 0.474597;
+	} else {
+		ambr = 0.2, ambg = 0.55, ambb = 0.15;
+		difr = 0.3, difg = 0.6, difb = 0.2;
+		specr = 0.574597, specg = 0.774597, specb = 0.474597;
+	}
 	shine = 0.6;
 	mat[0] = ambr;
 	mat[1] = ambg;
@@ -79,7 +89,22 @@ void Enemy::setZ(GLdouble n) {
 	this->z = n;
 }
 void Enemy::setRotated(GLdouble n) {
-	this->rotated = n;
+	this->rotated = n + 180.0;
+}
+void Enemy::wasHit() {
+	this->hitCount++;
+
+	if (this->hitCount >= enemyHitPoints) {
+		//Enemy disappear
+	}
+}
+void Enemy::reset() {
+	this->x = 0;
+	this->y = 0;
+	this->z = 0;
+
+	this->rotated = 0;
+	this->hitCount = 0;
 }
 void Enemy::animate(int time) {
 
@@ -138,4 +163,4 @@ void Enemy::draw() {
 	glPopMatrix();
 }
 
-Enemy::Enemy() :x(0), y(0), z(0), rotated(0) {}
+Enemy::Enemy() :x(0), y(0), z(0), rotated(0), hitCount(0) {}

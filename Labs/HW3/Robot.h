@@ -19,6 +19,7 @@ private:
 	GLdouble lengthLowerArm;
 	GLdouble lengthFingerSegment;
 	unsigned int numOfFingers;
+	unsigned long time;
 	GLdouble x;
 	GLdouble y;
 	GLdouble z;
@@ -38,7 +39,7 @@ public:
 	void setFingerAngle(double);
 	void setNumberOfFingers(unsigned int);
 
-	void doAttack(unsigned int);
+	void doAttack(unsigned int, unsigned long);
 	void toggleActivation();
 	void toggleWireframe();
 	void toggleAnimation();
@@ -61,7 +62,7 @@ public:
 	unsigned int getNumberOfFingers() const;
 
 	void draw();
-	void animate(int);
+	void animate(unsigned long);
 
 	Robot();
 };

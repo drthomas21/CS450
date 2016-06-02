@@ -3,7 +3,9 @@
 
 #include <time.h>
 #include <chrono>
+#ifndef LIB_H
 #include "lib.h"
+#endif
 #include "Point3.h"
 #include "Vector3.h"
 
@@ -14,6 +16,7 @@
 class Room {
 private:
 	std::chrono::system_clock::time_point time;
+	std::chrono::system_clock::time_point timeSegment;
 	size_t enemyCount;
 	GLdouble width;
 	GLdouble height;
@@ -21,13 +24,16 @@ private:
 	GLdouble cameraX;
 	GLdouble cameraY;
 	GLdouble cameraZ;
+	GLdouble cameraOffsetX;
+	GLdouble cameraOffsetY;
 	Enemy *enemies;
 	Robot robot;
 	Camera camera;
 
-	void moveEnemies(GLdouble);
+	void moveEnemy(Enemy*, GLdouble);
 	void faceRobot(Enemy*);
-
+	bool isSpotClear(GLdouble, GLdouble, Enemy*);
+	bool isSpotClear(GLdouble, GLdouble, Robot*);
 public:
 	GLdouble getWidth();
 	GLdouble getHeight();
@@ -35,6 +41,8 @@ public:
 	Enemy* getEnemy(size_t);
 	Robot* getRobot();
 	Camera* getCamera();
+
+	unsigned long getTime();
 
 	void setWidth(GLdouble);
 	void setHeight(GLdouble);

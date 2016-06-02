@@ -7,6 +7,9 @@
 #ifndef VECTOR3_H
 #include "Vector3.h"
 #endif
+#ifndef LIB_H
+#include "lib.h"
+#endif
 
 class Camera {
 private:

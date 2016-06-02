@@ -1,11 +1,11 @@
 #include "Robot.h"
-#include "lib.h"
 #include <math.h>
 #include <iostream>
 #include <chrono>
 #include <thread>
 
-GLdouble _theta1, _theta2, acceleration, t1, t2, baseRadius = 15.0;
+GLdouble _theta1, _theta2, acceleration, t1, t2, baseRadius = 15.0, thetas[10], timings[10];
+unsigned int attackPattern;
 
 void Robot::setX(GLdouble n) {
 	this->x = n;
@@ -72,13 +72,35 @@ void Robot::setNumberOfFingers(unsigned int n) {
 	this->numOfFingers = n;
 }
 
-void Robot::doAttack(unsigned int n) {
+void Robot::doAttack(unsigned int n, unsigned long time) {
+	if (this->isAnimating) return;
+	this->time = time;
 	switch (n) {
 		case 1:
+			thetas[0] = 90;
+			thetas[1] = 0;
+
+			timings[0] = 0.2;
+			timings[1] = 0.5;
+			timings[2] = 0.7;
+
+			attackPattern = n;
+			this->isAnimating = true;
 			break;
 		case 2:
-			break;
+			thetas[0] = 90;
+			thetas[1] = 45;
+			thetas[2] = -45;
+			thetas[3] = 90;
+
+			timings[0] = 0.2;
+			timings[1] = 0.6;
+			timings[2] = 0.8;
+			attackPattern = n;
+			this->isAnimating = true;
 		case 3:
+			attackPattern = n;
+			this->isAnimating = true;
 			break;
 	}
 }
@@ -377,15 +399,41 @@ void Robot::draw() {
 		glPopMatrix();
 	glPopMatrix();
 }
-void Robot::animate(int time) {
+void Robot::animate(unsigned long time) {
 	if (!this->isAnimating) return;
+	time -= this->time;
 
-	GLdouble velocity = 0;
-
-	if (this->angleHand == 0) {
-		this->isAnimating = 0;
-	} else {
-		
+	GLdouble _time = static_cast<double>(time) / 1000.0;
+	std::cout << _time << " " << timings[0] << std::endl;
+	if (attackPattern == 1) {
+		if (_time <= timings[0]) {
+			this->angleShoulder = thetas[0] * _time / timings[0];
+		} else if(_time >= timings[1] && _time < timings[2]) {
+			this->angleShoulder = thetas[0] * (timings[2] - _time) / timings[2];
+		} else if(_time > timings[2]) {
+			this->angleShoulder = 0;
+			this->isAnimating = false;
+		}
+	} else if (attackPattern == 2) {
+		if (_time <= timings[0]) {
+			this->rotate = thetas[1];
+			this->angleShoulder = thetas[0] * _time / timings[0];
+		} else if (_time <= timings[1]) {
+			this->angleHand = thetas[3];
+			this->rotate = thetas[0];
+			this->angleShoulder = thetas[1] * _time / timings[0];
+		} else if (_time <= timings[2]) {
+			this->angleHand = thetas[3];
+			this->rotate = thetas[0];
+			this->angleShoulder = thetas[1] * _time / timings[0];
+		} else {
+			this->rotate = 0;
+			this->angleShoulder = 0;
+			this->angleHand = 0;
+			this->isAnimating = false;
+		}
+	} else if (attackPattern == 3) {
+		this->isAnimating = false;
 	}
 }
 
